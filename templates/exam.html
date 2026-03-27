@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Online Programming Exam</title>
+
+<style>
+
+body{
+font-family:Arial;
+margin:40px;
+}
+
+textarea{
+width:100%;
+height:300px;
+font-family:monospace;
+font-size:14px;
+}
+
+button{
+padding:10px;
+margin-top:10px;
+}
+
+pre{
+background:#f5f5f5;
+padding:10px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>Bubble Sort Problem</h2>
+
+<p><b>Task:</b> Sort the given list using Bubble Sort</p>
+
+<p><b>Input:</b> 5 3 8 2 1</p>
+
+<p><b>Expected Output:</b></p>
+
+<pre>
+1 2 3 5 8
+</pre>
+
+<label>Student ID:</label>
+<input type="number" id="student_id">
+
+<br><br>
+
+<textarea id="code" placeholder="Write your code here"></textarea>
+
+<br>
+
+<button onclick="submitCode()">Run Code</button>
+
+<h3>Result</h3>
+
+<pre id="result"></pre>
+
+<script>
+
+
+
+// ---------------- INIT ----------------
+
+let pasteCount = 0;
+let pasteLength = 0;
+let keyPressCount = 0;
+let tabSwitchCount = 0;
+
+let typingStartTime = Date.now();
+let lastKeyTime = Date.now();
+let activeTypingTime = 0;
+
+let previousText = "";
+
+const editor = document.getElementById("code");
+
+// ---------------- PASTE DETECTION ----------------
+
+// CTRL+V
+editor.addEventListener("paste", function(e){
+    pasteCount++;
+
+    const pasted = e.clipboardData.getData("text");
+    pasteLength += pasted.length;
+});
+
+// DRAG & DROP
+editor.addEventListener("drop", function(e){
+    e.preventDefault();
+
+    const dropped = e.dataTransfer.getData("text");
+
+    if(dropped){
+        pasteCount++;
+        pasteLength += dropped.length;
+
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+
+        editor.value =
+            editor.value.substring(0, start) +
+            dropped +
+            editor.value.substring(end);
+    }
+});
+
+// LARGE INSERT DETECTION
+editor.addEventListener("input", function(){
+    let currentText = editor.value;
+
+    if(currentText.length - previousText.length > 40){
+        pasteCount++;
+    }
+
+    previousText = currentText;
+});
+
+// ---------------- TYPING TRACKING ----------------
+
+editor.addEventListener("keydown", () => {
+    keyPressCount++;
+
+    let now = Date.now();
+
+    
+    if(now - lastKeyTime < 2000){
+        activeTypingTime += (now - lastKeyTime);
+    }
+
+    lastKeyTime = now;
+});
+
+// ---------------- TAB SWITCH DETECTION ----------------
+
+document.addEventListener("visibilitychange", () => {
+    if(document.hidden){
+        tabSwitchCount++;
+        console.log("Tab switched:", tabSwitchCount);
+    }
+});
+
+// ---------------- METRICS ----------------
+
+function calculateMetrics(){
+    let totalTime = (Date.now() - typingStartTime) / 1000;
+
+    let avgTypingSpeed = totalTime > 0 ? keyPressCount / totalTime : 0;
+
+    return {
+        typing_time: totalTime,
+        active_typing_time: activeTypingTime / 1000,
+        avg_typing_speed: avgTypingSpeed,
+        paste_events: pasteCount,
+        paste_length: pasteLength,
+        tab_switches: tabSwitchCount
+    };
+}
+
+// ---------------- SUBMIT ----------------
+
+async function submitCode(){
+
+    let student_id = document.getElementById("student_id").value;
+    let code = editor.value;
+
+    if(!student_id){
+        alert("Enter Student ID");
+        return;
+    }
+
+    const metrics = calculateMetrics();
+
+    console.log("Sending Data:", metrics);
+
+    const response = await fetch("http://127.0.0.1:5000/api/run", {
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body: JSON.stringify({
+            student_id: student_id,
+            problem_id: 1,
+            code: code,
+            paste_events: metrics.paste_events,
+            paste_length: metrics.paste_length,
+            typing_time: metrics.typing_time,
+            active_typing_time: metrics.active_typing_time,
+            avg_typing_speed: metrics.avg_typing_speed,
+            tab_switches: metrics.tab_switches
+        })
+    });
+
+    const data = await response.json();
+
+    document.getElementById("result").innerText =
+    "Output:\n" + data.output +
+    "\nStatus: " + data.status;
+}
+
+
+</script>
+
+</body>
+</html>

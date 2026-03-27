@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Faculty Monitoring Dashboard</title>
+
+<style>
+
+body{
+font-family:Arial;
+margin:40px;
+}
+
+table{
+border-collapse:collapse;
+width:100%;
+margin-top:20px;
+}
+
+th,td{
+border:1px solid #ccc;
+padding:10px;
+text-align:left;
+}
+
+th{
+background:#f2f2f2;
+}
+
+.high{
+background:#ffcccc;
+}
+
+.normal{
+background:#ccffcc;
+}
+
+button{
+padding:10px;
+}
+
+/* Modal Styling */
+
+#modal{
+display:none;
+position:fixed;
+top:10%;
+left:20%;
+width:60%;
+background:white;
+padding:20px;
+border:2px solid black;
+box-shadow:0px 0px 10px gray;
+z-index:1000;
+}
+
+#modal table{
+width:100%;
+border-collapse:collapse;
+}
+
+#modal th, #modal td{
+border:1px solid #ccc;
+padding:8px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>Faculty Monitoring Dashboard</h2>
+
+<button onclick="loadReport()">Load Report</button>
+
+<h3>Summary</h3>
+<p id="summary"></p>
+
+<table id="reportTable">
+
+<thead>
+<tr>
+<th>Student ID</th>
+<th>Attempts</th>
+<th>Risk</th>
+</tr>
+</thead>
+
+<tbody></tbody>
+
+</table>
+
+
+<!-- ================= MODAL ================= -->
+
+<div id="modal">
+
+<h3 id="modalTitle"></h3>
+
+<table>
+
+<thead>
+<tr>
+<th>Attempt</th>
+<th>Paste</th>
+<th>Risk</th>
+<th>Reason</th>
+</tr>
+</thead>
+
+<tbody id="modalBody"></tbody>
+
+</table>
+
+<br>
+
+<button onclick="closeModal()">Close</button>
+
+</div>
+
+
+<script>
+
+let token = ""
+
+// ---------------- LOGIN ----------------
+async function login(){
+
+const response = await fetch("/api/admin/login",{
+
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+username:"admin",
+password:"admin123"
+})
+
+})
+
+const data = await response.json()
+
+token = data.token
+
+}
+
+
+// ---------------- LOAD DASHBOARD ----------------
+async function loadReport(){
+
+const response = await fetch("/api/report/all",{
+
+headers:{
+"Authorization":token
+}
+
+})
+
+const data = await response.json()
+
+document.getElementById("summary").innerText =
+`Total: ${data.total_submissions} | High Risk: ${data.high_risk_count} | Normal: ${data.normal_count}`
+
+const tbody = document.querySelector("#reportTable tbody")
+
+tbody.innerHTML = ""
+
+data.students.forEach(student => {
+
+const row = document.createElement("tr")
+
+// Row color
+if(student.risk_level === "High"){
+row.className = "high"
+}else{
+row.className = "normal"
+}
+
+// Clickable student ID
+row.innerHTML = `
+<td style="cursor:pointer;color:blue"
+onclick="loadStudent(${student.student_id})">
+${student.student_id}
+</td>
+<td>${student.attempts}</td>
+<td>${student.risk_level}</td>
+`
+
+tbody.appendChild(row)
+
+})
+
+}
+
+
+// ---------------- LOAD STUDENT HISTORY ----------------
+async function loadStudent(student_id){
+
+const response = await fetch(`/api/report/student/${student_id}`,{
+
+headers:{
+"Authorization":token
+}
+
+})
+
+const data = await response.json()
+
+document.getElementById("modalTitle").innerText =
+"Student ID: " + student_id
+
+const body = document.getElementById("modalBody")
+
+body.innerHTML = ""
+
+data.history.forEach(h => {
+
+const row = document.createElement("tr")
+
+// Highlight attempts
+if(h.risk_level === "High"){
+row.style.background = "#ffcccc"
+}else{
+row.style.background = "#ccffcc"
+}
+
+row.innerHTML = `
+<td>${h.attempt}</td>
+<td>${h.paste_events}</td>
+<td>${h.risk_level}</td>
+<td>${h.reason}</td>
+`
+
+body.appendChild(row)
+
+})
+
+// Show modal
+document.getElementById("modal").style.display = "block"
+
+}
+
+
+// ---------------- CLOSE MODAL ----------------
+function closeModal(){
+
+document.getElementById("modal").style.display = "none"
+
+}
+
+
+// auto login
+login()
+
+</script>
+
+</body>
+</html>

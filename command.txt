@@ -1,0 +1,38 @@
+cd K:\ml_exam_backend
+venv\Scripts\activate
+
+
+backend testing 
+Invoke-RestMethod `
+  -Uri "http://127.0.0.1:5000/api/logs" `
+  -Method Post `
+  -ContentType "application/json" `
+  -Body '{
+    "student_id": 2,
+    "problem_id": 1,
+    "typing_time": 850,
+    "paste_events": 0,
+    "paste_length": 0,
+    "attempts": 1,
+    "similarity_score": 25,
+    "avg_typing_speed": 4,
+    "time_to_code_ratio": 1.4,
+    "code": "print(\"Hello World\")"
+  }'
+
+ Invoke-RestMethod `
+>>   -Uri "http://127.0.0.1:5000/api/logs" `
+>>   -Method Post `
+>>   -ContentType "application/json" `
+>>   -Body '{
+>>     "student_id": 2,
+>>     "problem_id": 1,
+>>     "typing_time": 850,
+>>     "paste_events": 0,
+>>     "paste_length": 0,
+>>     "attempts": 1,
+>>     "similarity_score": 25,
+>>     "avg_typing_speed": 4,
+>>     "time_to_code_ratio": 1.4,
+>>     "code": "a=int(input())\n b=int(input())\n c=a+b\n print(c)"
+>>   }'                                                                                                                                                                                                   
