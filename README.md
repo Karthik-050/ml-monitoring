@@ -6,6 +6,8 @@ The system produces indicators for review. An anomaly, paste event, or similarit
 
 ## Features in the repository
 
+
+
 - **Programming exam page** with an editor and browser-side tracking for paste events, pasted character count, typing time, typing speed, and tab visibility changes.
 - **Python code runner** exposed through Flask at `/api/run`.
 - **Submission logging** to MongoDB, including code, selected behavior metrics, risk level, and timestamp.
@@ -164,7 +166,3 @@ This is a basic text similarity approach. It does not perform AST-based comparis
 ## Responsible use
 
 Use monitoring results as evidence for human review, not as an automatic determination of misconduct. Behavior such as pasting, typing quickly, or switching tabs can have legitimate explanations. Provide clear notice to students about what activity is collected and how it is used.
-
-## Development status
-
-This repository contains prototype implementations of the exam page, Flask routes, MongoDB submission storage, Isolation Forest training, text similarity, and faculty reporting. End-to-end behavior and model validity should be verified before relying on the results.
